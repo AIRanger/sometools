@@ -111,4 +111,51 @@ class Rtools():
 
             
             pass
+	def __get_points(self,score):
+            points = []
+            if isinstance(score,list):
+                score = self.pd.Series(score)
+            interval = round((score.max() - score.min())/10,6)
+            for i in range(10):
+                points.append(round(score.min()+i*interval,6))
+            #         print(int(score.min())+i*interval)
+            points.append(round(score.max(),6))
+            return points
+    
+        #
+        def __get_points2(self,score,bins_Num):
+            #points = []
+            #bins=pd.qcut(score, bins_Num)
+            #for ix,i in enumerate(bins.value_counts().sort_index().index.values):
+            #    points.append(i.right)
+            #del points[bins_Num-1]
+            points = pd.qcut(score, bins_Num,retbins = True)[1]
+        
+            del points[0]
+            del points[bins_Num-1]
+        
+            return points
+        #       
+    
+        def __cal_ratio(self,score,points):
+            p = []
+            for i in range(10):
+                p.append(sum((score>=points[i])&(score<points[i+1]))/len(score)+0.00000000000001)
+            return p
+    
+        def __cal_psi(self,p_expect,p_real):
+            import math
+            psi = 0
+            for m,n in zip(p_expect,p_real):
+                psi_n = (n-m)*math.log(n/m)
+                psi += psi_n
+
+            return psi
+    
+    def run_psi(self,standard,test_data):
+        points = self.__get_points(standard)
+        p_base = self.__cal_ratio(standard,points)
+        p_test = self.__cal_ratio(test_data,points)
+        psi = self.__cal_psi(p_base,p_test)
+        return psi
 
